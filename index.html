@@ -1488,407 +1488,107 @@ async function accessManagerGrid() {
         }
 
         // Enter scores
-        function showEnterScoresModal() {
-            const container = document.getElementById('scoresContent');
-            const frequency = currentGrid.payoutFrequency;
+function showEnterScoresModal() {
+    const container = document.getElementById('scoresContent');
+    const frequency = currentGrid.payoutFrequency;
 
-            let html = '<div class="info-box">Enter the final scores for each period to determine winners.</div>';
+    let html = '<div class="info-box">Enter the final scores for each period to determine winners.</div>';
 
-            if (frequency === 'quarterly') {
-                html += buildScoreFields(['Q1', 'Q2', 'Q3', 'Final']);
-            } else if (frequency === 'half-final') {
-                html += buildScoreFields(['Half', 'Final']);
-            } else {
-                html += buildScoreFields(['Final']);
-            }
+    function addPeriod(p) {
+        const key = p.toLowerCase();
+        const val = (currentGrid.scores && currentGrid.scores[key]) || { a: '', b: '' };
+        html += '<div class="form-row" style="margin-bottom:0.75rem;">' +
+            '<div class="input-group">' +
+                '<label>' + p + ' - Team A Score</label>' +
+                '<input type="number" min="0" id="' + key + 'ScoreA" value="' + val.a + '">' +
+            '</div>' +
+            '<div class="input-group">' +
+                '<label>' + p + ' - Team B Score</label>' +
+                '<input type="number" min="0" id="' + key + 'ScoreB" value="' + val.b + '">' +
+            '</div>' +
+        '</div>';
+    }
 
-            html += `
-                <div class="toolbar" style="margin-top:1rem;">
-                    <button type="submit" class="btn btn-primary">Save Scores & Calculate Winners</button>
-                </div>
-            `;
+    if (frequency === 'quarterly') {
+        ['Q1', 'Q2', 'Q3', 'Final'].forEach(addPeriod);
+    } else if (frequency === 'half-final') {
+        ['Half', 'Final'].forEach(addPeriod);
+    } else {
+        ['Final'].forEach(addPeriod);
+    }
 
-            container.innerHTML = html;
-            showModal('enterScoresModal');
-        }
+    html += '<div class="toolbar" style="margin-top:1rem;">' +
+        '<button type="submit" class="btn btn-primary">Save Scores & Calculate Winners</button>' +
+    '</div>';
 
-        function buildScoreFields(periods) {
-            let html = '';
-            periods.forEach(p => {
-                const key = p.toLowerCase();
-                const val = currentGrid.scores[key] || { a: '', b: '' };
-                html += `
-                    <div class="form-row" style="margin-bottom:0.75rem;">
-                        <div class="input-group">
-                            <label>${p} - Team A Score</label>
-                            <input type="number" min="0" id="${key}ScoreA" value="${val.a}">
-                        </div>
-                        <div class="input-group">
-                            <label>${p} - Team B Score</label>
-                            <input type="number" min="0" id="${key}ScoreB" value="${val.b}">
-                        </div>
-                    </div>
-                `;
-            });
-            return html;
-        }
+    container.innerHTML = html;
+    showModal('enterScoresModal');
+}
 
-              function enterScores(e) {
-            e.preventDefault();
-            const frequency = currentGrid.payoutFrequency;
-            const winners = [];
-            const scores = {};
+function enterScores(e) {
+    e.preventDefault();
+    const frequency = currentGrid.payoutFrequency;
+    const winners = [];
+    const scores = {};
 
-            function processPeriod(label, key, payoutKey) {
-                const a = parseInt(document.getElementById(`${key}ScoreA`).value, 10);
-                const b = parseInt(document.getElementById(`${key}ScoreB`).value, 10);
-                if (isNaN(a) || isNaN(b)) return;
+    function processPeriod(label, key, payoutKey) {
+        const a = parseInt(document.getElementById(key + 'ScoreA').value, 10);
+        const b = parseInt(document.getElementById(key + 'ScoreB').value, 10);
+        if (isNaN(a) || isNaN(b)) return;
 
-                scores[key] = { a, b };
-                const lastA = a % 10;
-                const lastB = b % 10;
+        scores[key] = { a: a, b: b };
+        const lastA = a % 10;
+        const lastB = b % 10;
 
-                const rowIndex = currentGrid.rowNumbers.indexOf(lastA);
-                const colIndex = currentGrid.colNumbers.indexOf(lastB);
-                if (rowIndex === -1 || colIndex === -1) return;
+        const rowIndex = currentGrid.rowNumbers.indexOf(lastA);
+        const colIndex = currentGrid.colNumbers.indexOf(lastB);
+        if (rowIndex === -1 || colIndex === -1) return;
 
-                const squareId = rowIndex * 10 + colIndex;
-                const square = currentGrid.squares[squareId];
-                if (!square.owner) return;
+        const squareId = rowIndex * 10 + colIndex;
+        const square = currentGrid.squares[squareId];
+        if (!square.owner) return;
 
-                const payout = currentGrid.payouts[payoutKey];
-                if (!payout || payout <= 0) return;
+        const payout = currentGrid.payouts[payoutKey];
+        if (!payout || payout <= 0) return;
 
-                winners.push({
-                    period: label,
-                    key: key,
-                    squareId: squareId,
-                    scoreA: a,
-                    scoreB: b,
-                    payout: payout
-                });
-            }
+        winners.push({
+            period: label,
+            key: key,
+            squareId: squareId,
+            scoreA: a,
+            scoreB: b,
+            payout: payout
+        });
+    }
 
-            if (frequency === 'quarterly') {
-                processPeriod('Q1', 'q1', 'q1');
-                processPeriod('Q2', 'q2', 'q2');
-                processPeriod('Q3', 'q3', 'q3');
-                processPeriod('Final', 'final', 'final');
-            } else if (frequency === 'half-final') {
-                processPeriod('Half', 'half', 'half');
-                processPeriod('Final', 'final', 'final');
-            } else {
-                processPeriod('Final', 'final', 'final');
-            }
+    if (frequency === 'quarterly') {
+        processPeriod('Q1', 'q1', 'q1');
+        processPeriod('Q2', 'q2', 'q2');
+        processPeriod('Q3', 'q3', 'q3');
+        processPeriod('Final', 'final', 'final');
+    } else if (frequency === 'half-final') {
+        processPeriod('Half', 'half', 'half');
+        processPeriod('Final', 'final', 'final');
+    } else {
+        processPeriod('Final', 'final', 'final');
+    }
 
-            currentGrid.scores = scores;
-            currentGrid.winners = winners;
-            if (winners.length > 0) {
-                currentGrid.status = 'complete';
-            }
+    currentGrid.scores = scores;
+    currentGrid.winners = winners;
+    if (winners.length > 0) {
+        currentGrid.status = 'complete';
+    }
 
-            const idx = grids.findIndex(g => g.id === currentGrid.id);
-            grids[idx] = currentGrid;
-            saveGrids();
-            saveGridToFirestore(currentGrid);
-            closeModal('enterScoresModal');
-            showSuccessBanner('Scores saved and winners calculated!');
-        }
+    const idx = grids.findIndex(function (g) { return g.id === currentGrid.id; });
+    grids[idx] = currentGrid;
+    saveGrids();
+    saveGridToFirestore(currentGrid);
 
-        // Edit grid details
-        function editGridDetails() {
-            const eventDate = new Date(currentGrid.eventDate);
-            const container = document.getElementById('managerGridView');
+    closeModal('enterScoresModal');
+    showSuccessBanner('Scores saved and winners calculated!');
+}
 
-            const formHtml = `
-                <div class="card">
-                    <h2>Edit Grid Details</h2>
-                    <form id="editGridForm" onsubmit="saveGridDetails(event)">
-                        <div class="input-group">
-                            <label for="editGridName">Grid Name</label>
-                            <input type="text" id="editGridName" required value="${currentGrid.name}">
-                        </div>
-
-                        <div class="input-group">
-                            <label for="editEventName">Event/Game</label>
-                            <input type="text" id="editEventName" required value="${currentGrid.eventName}">
-                        </div>
-
-                        <div class="input-group">
-                            <label for="editEventDate">Event Date & Time</label>
-                            <input type="datetime-local" id="editEventDate" required value="${formatDateTimeLocal(eventDate)}">
-                        </div>
-
-                        <div class="form-row">
-                            <div class="input-group">
-                                <label for="editPricePerSquare">Price per Square ($)</label>
-                                <input type="number" id="editPricePerSquare" required min="0" step="0.01" value="${currentGrid.pricePerSquare}">
-                            </div>
-
-                            <div class="input-group">
-                                <label for="editPayoutFrequency">Payout Frequency</label>
-                                <select id="editPayoutFrequency" required onchange="updateEditPayoutFields(true)">
-                                    <option value="quarterly" ${currentGrid.payoutFrequency === 'quarterly' ? 'selected' : ''}>Quarterly (4 payouts)</option>
-                                    <option value="half-final" ${currentGrid.payoutFrequency === 'half-final' ? 'selected' : ''}>Half & Final (2 payouts)</option>
-                                    <option value="final" ${currentGrid.payoutFrequency === 'final' ? 'selected' : ''}>Final Only (1 payout)</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <div id="editPayoutFields"></div>
-
-                        <div class="input-group">
-                            <label for="editAssignmentMethod">Number Assignment Method</label>
-                            <select id="editAssignmentMethod" required>
-                                <option value="random" ${currentGrid.assignmentMethod === 'random' ? 'selected' : ''}>Random Assignment</option>
-                                <option value="manual" ${currentGrid.assignmentMethod === 'manual' ? 'selected' : ''}>Manual Assignment</option>
-                            </select>
-                        </div>
-
-                        <div class="input-group">
-                            <label for="editGridRules">Rules/Instructions</label>
-                            <textarea id="editGridRules" rows="3">${currentGrid.rules || ''}</textarea>
-                        </div>
-
-                        <div class="toolbar">
-                            <button type="submit" class="btn btn-primary">Save Changes</button>
-                            <button type="button" class="btn btn-secondary" onclick="renderManagerGrid()">Cancel</button>
-                        </div>
-                    </form>
-                </div>
-            `;
-
-            container.innerHTML = formHtml;
-            updateEditPayoutFields(true);
-        }
-
-        function updateEditPayoutFields(initial = false) {
-            const frequency = document.getElementById('editPayoutFrequency').value;
-            const container = document.getElementById('editPayoutFields');
-
-            let html = '<div class="info-box" style="margin-top: 1rem;"><strong>Payout Amounts</strong></div>';
-
-            if (frequency === 'quarterly') {
-                html += `
-                    <div class="form-row">
-                        <div class="input-group">
-                            <label>Q1 Payout ($)</label>
-                            <input type="number" id="editPayoutQ1" required min="0" step="0.01">
-                        </div>
-                        <div class="input-group">
-                            <label>Q2 Payout ($)</label>
-                            <input type="number" id="editPayoutQ2" required min="0" step="0.01">
-                        </div>
-                    </div>
-                    <div class="form-row">
-                        <div class="input-group">
-                            <label>Q3 Payout ($)</label>
-                            <input type="number" id="editPayoutQ3" required min="0" step="0.01">
-                        </div>
-                        <div class="input-group">
-                            <label>Final Payout ($)</label>
-                            <input type="number" id="editPayoutFinal" required min="0" step="0.01">
-                        </div>
-                    </div>
-                `;
-            } else if (frequency === 'half-final') {
-                html += `
-                    <div class="form-row">
-                        <div class="input-group">
-                            <label>Halftime Payout ($)</label>
-                            <input type="number" id="editPayoutHalf" required min="0" step="0.01">
-                        </div>
-                        <div class="input-group">
-                            <label>Final Payout ($)</label>
-                            <input type="number" id="editPayoutFinal" required min="0" step="0.01">
-                        </div>
-                    </div>
-                `;
-            } else {
-                html += `
-                    <div class="input-group">
-                        <label>Final Payout ($)</label>
-                        <input type="number" id="editPayoutFinal" required min="0" step="0.01">
-                    </div>
-                `;
-            }
-
-            container.innerHTML = html;
-
-            if (initial) {
-                const p = currentGrid.payouts || {};
-                if (frequency === 'quarterly') {
-                    document.getElementById('editPayoutQ1').value = p.q1 || '';
-                    document.getElementById('editPayoutQ2').value = p.q2 || '';
-                    document.getElementById('editPayoutQ3').value = p.q3 || '';
-                    document.getElementById('editPayoutFinal').value = p.final || '';
-                } else if (frequency === 'half-final') {
-                    document.getElementById('editPayoutHalf').value = p.half || '';
-                    document.getElementById('editPayoutFinal').value = p.final || '';
-                } else {
-                    document.getElementById('editPayoutFinal').value = p.final || '';
-                }
-            }
-        }
-
-        function saveGridDetails(e) {
-            e.preventDefault();
-
-            currentGrid.name = document.getElementById('editGridName').value.trim();
-            currentGrid.eventName = document.getElementById('editEventName').value.trim();
-            currentGrid.eventDate = document.getElementById('editEventDate').value;
-            currentGrid.pricePerSquare = parseFloat(document.getElementById('editPricePerSquare').value);
-            currentGrid.payoutFrequency = document.getElementById('editPayoutFrequency').value;
-            currentGrid.assignmentMethod = document.getElementById('editAssignmentMethod').value;
-            currentGrid.rules = document.getElementById('editGridRules').value;
-
-            const payouts = {};
-            if (currentGrid.payoutFrequency === 'quarterly') {
-                payouts.q1 = parseFloat(document.getElementById('editPayoutQ1').value);
-                payouts.q2 = parseFloat(document.getElementById('editPayoutQ2').value);
-                payouts.q3 = parseFloat(document.getElementById('editPayoutQ3').value);
-                payouts.final = parseFloat(document.getElementById('editPayoutFinal').value);
-            } else if (currentGrid.payoutFrequency === 'half-final') {
-                payouts.half = parseFloat(document.getElementById('editPayoutHalf').value);
-                payouts.final = parseFloat(document.getElementById('editPayoutFinal').value);
-            } else {
-                payouts.final = parseFloat(document.getElementById('editPayoutFinal').value);
-            }
-            currentGrid.payouts = payouts;
-
-            const idx = grids.findIndex(g => g.id === currentGrid.id);
-            grids[idx] = currentGrid;
-            saveGrids();
-            saveGridToFirestore(currentGrid);
-
-            renderManagerGrid();
-            showSuccessBanner('✅ Grid details updated.');
-        }
-
-        // Delete grid
-        function deleteGrid() {
-            if (!confirm('Delete this grid? This cannot be undone.')) return;
-
-            grids = grids.filter(g => g.id !== currentGrid.id);
-            saveGrids();
-            currentGrid = null;
-
-            document.getElementById('managerGridView').classList.add('hidden');
-            renderMyGrids();
-            showSuccessBanner('✅ Grid deleted.');
-        }
-
-        // Auto refresh
-        function startAutoRefresh() {
-            stopAutoRefresh();
-            autoRefreshInterval = setInterval(() => {
-                loadGrids();
-                if (!currentGrid) return;
-                const updated = grids.find(g => g.id === currentGrid.id);
-                if (!updated) return;
-                currentGrid = updated;
-
-                if (document.getElementById('participantGridView') && 
-                    !document.getElementById('participantGridView').classList.contains('hidden')) {
-                    renderParticipantGrid();
-                }
-                if (document.getElementById('managerGridView') && 
-                    !document.getElementById('managerGridView').classList.contains('hidden')) {
-                    renderManagerGrid();
-                }
-            }, 5000);
-        }
-
-        function stopAutoRefresh() {
-            if (autoRefreshInterval) {
-                clearInterval(autoRefreshInterval);
-            }
-            autoRefreshInterval = null;
-        }
-
-        // Notifications
-        function checkNotifications(grid) {
-            if (!grid.notifications || grid.notifications.length === 0) return;
-            grid.notifications = [];
-            const idx = grids.findIndex(g => g.id === grid.id);
-            grids[idx] = grid;
-            saveGrids();
-        }
-
-        // Modals & banners
-        function showCreateGridModal() {
-            showModal('createGridModal');
-        }
-
-        function showModal(id) {
-            document.getElementById(id).classList.add('active');
-        }
-
-        function closeModal(id) {
-            document.getElementById(id).classList.remove('active');
-        }
-
-        function showSuccessBanner(message) {
-            const banner = document.createElement('div');
-            banner.className = 'success-banner';
-            banner.textContent = message;
-            document.body.appendChild(banner);
-
-            setTimeout(() => {
-                banner.style.animation = 'slideUp 0.3s ease forwards';
-                setTimeout(() => banner.remove(), 300);
-            }, 2000);
-        }
-
-        // Show view
-        function showView(ev, view) {
-            if (ev && ev.target) {
-                document.querySelectorAll('.view-tab').forEach(tab => tab.classList.remove('active'));
-                ev.target.classList.add('active');
-            }
-            
-            document.getElementById('homeView').classList.add('hidden');
-            document.getElementById('accessView').classList.add('hidden');
-            document.getElementById('manageView').classList.add('hidden');
-            
-            stopAutoRefresh();
-            currentGrid = null;
-            
-            if (view === 'home') {
-                document.getElementById('homeView').classList.remove('hidden');
-                renderMyGrids();
-            } else if (view === 'access') {
-                document.getElementById('accessView').classList.remove('hidden');
-                document.getElementById('participantGridView').classList.add('hidden');
-            } else if (view === 'manage') {
-                document.getElementById('manageView').classList.remove('hidden');
-                document.getElementById('managerGridView').classList.add('hidden');
-            }
-        }
-
-        // Init
-        window.addEventListener('load', init);
-    </script>
-
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
-
-    <!-- Firebase config -->
-    <script>
-      const firebaseConfig = {
-        // paste your actual config here
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT.firebaseapp.com",
-        projectId: "YOUR_PROJECT",
-        storageBucket: "YOUR_PROJECT.appspot.com",
-        messagingSenderId: "YOUR_SENDER_ID",
-        appId: "YOUR_APP_ID"
-      };
-
-      firebase.initializeApp(firebaseConfig);
-      const db = firebase.firestore();
-    </script>
-</body>
-</html>
- 
+// keep your existing editGridDetails, updateEditPayoutFields, saveGridDetails,
+// deleteGrid, startAutoRefresh, stopAutoRefresh, checkNotifications,
+// showCreateGridModal, showModal, closeModal, showSuccessBanner, showView,
+// window.addEventListener('load', init);
