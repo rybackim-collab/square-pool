@@ -673,18 +673,73 @@
             </form>
         </div>
     </div>
+            <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 
     <script>
-        // Data Structure
-        let grids = [];
-        let currentGrid = null;
-        let selectedSquare = null;
-        let autoRefreshInterval = null;
+  // Your actual config from Firebase console:
+  const firebaseConfig = {
+    apiKey: "…",
+    authDomain: "…",
+    projectId: "…",
+    storageBucket: "…",
+    messagingSenderId: "…",
+    appId: "…"
+  };
 
-        // Initialize
-        function init() {
-            loadGrids();
-            renderMyGrids();
+  // IMPORTANT: use firebase.initializeApp, not initializeApp
+  firebase.initializeApp(firebaseConfig);
+
+  // Firestore handle
+  const db = firebase.firestore();
+</script>
+
+   
+   <script>
+    // Data Structure
+    let grids = [];
+    let currentGrid = null;
+    let selectedSquare = null;
+    let autoRefreshInterval = null;
+
+    // ===== Firestore helpers =====
+
+    // Save a grid to Firestore (by id)
+    async function saveGridToFirestore(grid) {
+        try {
+            await db.collection('grids').doc(String(grid.id)).set(grid);
+        } catch (err) {
+            console.error('Error saving grid to Firestore', err);
+        }
+    }
+
+    // Load a grid from Firestore by managerCode
+    async function loadGridByManagerCode(code) {
+        const snap = await db
+            .collection('grids')
+            .where('managerCode', '==', code)
+            .limit(1)
+            .get();
+        if (snap.empty) return null;
+        return snap.docs[0].data();
+    }
+
+    // Load a grid from Firestore by accessCode
+    async function loadGridByAccessCode(code) {
+        const snap = await db
+            .collection('grids')
+            .where('accessCode', '==', code)
+            .limit(1)
+            .get();
+        if (snap.empty) return null;
+        return snap.docs[0].data();
+    }
+
+    // Initialize
+    function init() {
+        loadGrids();
+        renderMyGrids();
             
             // Set default event date to tomorrow at 6 PM
             const tomorrow = new Date();
@@ -952,44 +1007,87 @@
             setTimeout(() => accessManagerGrid(), 100);
         }
 
-        // Access grid as participant
-        function accessGrid() {
-            const code = document.getElementById('accessCodeInput').value.toUpperCase().trim();
-            if (!code) {
-                alert('Please enter an access code');
-                return;
-            }
+        // Access grid as participant (multi-device)
+async function accessGrid() {
+    const code = document.getElementById('accessCodeInput').value.toUpperCase().trim();
+    
+    if (!code) {
+        alert('Please enter an access code');
+        return;
+    }
 
-            const grid = grids.find(g => g.accessCode === code);
-            if (!grid) {
-                alert('Invalid access code');
-                return;
-            }
+    // 1) Try local grids first (desktop where it was created)
+    let grid = grids.find(g => g.accessCode === code);
 
-            currentGrid = grid;
-            renderParticipantGrid();
-            startAutoRefresh();
+    // 2) If not found locally, try Firestore
+    if (!grid) {
+        try {
+            grid = await loadGridByAccessCode(code);
+        } catch (err) {
+            console.error('Error loading grid from Firestore by access code', err);
         }
+    }
 
-        // Access grid as manager
-        function accessManagerGrid() {
-            const code = document.getElementById('managerCodeInput').value.toUpperCase().trim();
-            if (!code) {
-                alert('Please enter a manager code');
-                return;
-            }
+    if (!grid) {
+        alert('Invalid access code');
+        return;
+    }
 
-            const grid = grids.find(g => g.managerCode === code);
-            if (!grid) {
-                alert('Invalid manager code');
-                return;
-            }
+    // Keep local copy in memory (and in localStorage for this device)
+    currentGrid = grid;
+    const idx = grids.findIndex(g => g.id === grid.id);
+    if (idx === -1) {
+        grids.push(grid);
+    } else {
+        grids[idx] = grid;
+    }
+    saveGrids();
 
-            currentGrid = grid;
-            renderManagerGrid();
-            startAutoRefresh();
-            checkNotifications(grid);
+    renderParticipantGrid();
+    startAutoRefresh();
+}
+
+
+        // Access grid as manager (multi-device)
+async function accessManagerGrid() {
+    const code = document.getElementById('managerCodeInput').value.toUpperCase().trim();
+    
+    if (!code) {
+        alert('Please enter a manager code');
+        return;
+    }
+
+    // 1) Try local grids first
+    let grid = grids.find(g => g.managerCode === code);
+
+    // 2) If not found locally, try Firestore
+    if (!grid) {
+        try {
+            grid = await loadGridByManagerCode(code);
+        } catch (err) {
+            console.error('Error loading grid from Firestore by manager code', err);
         }
+    }
+
+    if (!grid) {
+        alert('Invalid manager code');
+        return;
+    }
+
+    currentGrid = grid;
+    const idx = grids.findIndex(g => g.id === grid.id);
+    if (idx === -1) {
+        grids.push(grid);
+    } else {
+        grids[idx] = grid;
+    }
+    saveGrids();
+
+    renderManagerGrid();
+    startAutoRefresh();
+    checkNotifications(grid);
+}
+
 
         // Render participant grid
         function renderParticipantGrid() {
@@ -1481,6 +1579,10 @@
             const idx = grids.findIndex(g => g.id === currentGrid.id);
             grids[idx] = currentGrid;
             saveGrids();
+            // Also save to Firestore for multi-device access
+    saveGridToFirestore(grid);
+
+
 
             closeModal('enterScoresModal');
             renderManagerGrid();
@@ -1705,12 +1807,13 @@
             grids[idx] = grid;
             saveGrids();
         }
-        // Open the Create Grid modal
+
+
+        // Modals & banners
+                // Open the Create Grid modal
 function showCreateGridModal() {
     showModal('createGridModal');
 }
-
-        // Modals & banners
         function showModal(id) {
             document.getElementById(id).classList.add('active');
         }
