@@ -673,19 +673,12 @@
             </form>
         </div>
     </div>
-            <!-- Firebase SDKs -->
+          <!-- Firebase SDKs (CDN) -->
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
 
-   <script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+    <!-- Firebase config -->
+    <script>
   const firebaseConfig = {
     apiKey: "AIzaSyDl8cG-hU92dfjlZ0NM2_OrNaWP2qzYwcU",
     authDomain: "square-pool.firebaseapp.com",
@@ -696,11 +689,9 @@
     measurementId: "G-L65JZF42KG"
   };
 
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
-</script>
-
+  firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+    </script>
    
    <script>
     // Data Structure
@@ -715,13 +706,37 @@
     async function saveGridToFirestore(grid) {
     console.log('Saving grid to Firestore with id:', grid.id);
     try {
-        await db.collection('grids').doc(String(grid.id)).set(grid);
+        const docId = String(grid.id);
+
+        const docData = {
+            id: grid.id,
+            name: grid.name,
+            eventName: grid.eventName,
+            eventDate: grid.eventDate,
+            pricePerSquare: grid.pricePerSquare,
+            payoutFrequency: grid.payoutFrequency,
+            payouts: grid.payouts,
+            assignmentMethod: grid.assignmentMethod,
+            rules: grid.rules || '',
+            accessCode: grid.accessCode,
+            managerCode: grid.managerCode,
+            status: grid.status,
+            squares: grid.squares,
+            rowNumbers: grid.rowNumbers,
+            colNumbers: grid.colNumbers,
+            numbersAssigned: grid.numbersAssigned,
+            scores: grid.scores,
+            winners: grid.winners,
+            createdAt: grid.createdAt,
+            notifications: grid.notifications || []
+        };
+
+        await db.collection('grids').doc(docId).set(docData);
         console.log('Grid saved to Firestore.');
     } catch (err) {
-        console.error('Error saving grid to Firestore', err);
+        console.error('Error saving grid to Firestore', err && err.code, err && err.message);
     }
 }
-
     // Load a grid from Firestore by managerCode
     async function loadGridByManagerCode(code) {
         const snap = await db
