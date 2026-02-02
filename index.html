@@ -1533,69 +1533,68 @@ async function accessManagerGrid() {
             return html;
         }
 
-        function enterScores(e) {
-    e.preventDefault();
-    const frequency = currentGrid.payoutFrequency;
-    const winners = [];
-    const scores = {};
+              function enterScores(e) {
+            e.preventDefault();
+            const frequency = currentGrid.payoutFrequency;
+            const winners = [];
+            const scores = {};
 
-    function processPeriod(label, key, payoutKey) {
-        const a = parseInt(document.getElementById(`${key}ScoreA`).value, 10);
-        const b = parseInt(document.getElementById(`${key}ScoreB`).value, 10);
-        if (isNaN(a) || isNaN(b)) return;
+            function processPeriod(label, key, payoutKey) {
+                const a = parseInt(document.getElementById(`${key}ScoreA`).value, 10);
+                const b = parseInt(document.getElementById(`${key}ScoreB`).value, 10);
+                if (isNaN(a) || isNaN(b)) return;
 
-        scores[key] = { a, b };
-        const lastA = a % 10;
-        const lastB = b % 10;
+                scores[key] = { a, b };
+                const lastA = a % 10;
+                const lastB = b % 10;
 
-        const rowIndex = currentGrid.rowNumbers.indexOf(lastA);
-        const colIndex = currentGrid.colNumbers.indexOf(lastB);
-        if (rowIndex === -1 || colIndex === -1) return;
+                const rowIndex = currentGrid.rowNumbers.indexOf(lastA);
+                const colIndex = currentGrid.colNumbers.indexOf(lastB);
+                if (rowIndex === -1 || colIndex === -1) return;
 
-        const squareId = rowIndex * 10 + colIndex;
-        const square = currentGrid.squares[squareId];
-        if (!square.owner) return;
+                const squareId = rowIndex * 10 + colIndex;
+                const square = currentGrid.squares[squareId];
+                if (!square.owner) return;
 
-        const payout = currentGrid.payouts[payoutKey];
-        if (!payout || payout <= 0) return;
+                const payout = currentGrid.payouts[payoutKey];
+                if (!payout || payout <= 0) return;
 
-        winners.push({
-            period: label,
-            key: key,
-            squareId: squareId,
-            scoreA: a,
-            scoreB: b,
-            payout: payout
-        });
-    }
+                winners.push({
+                    period: label,
+                    key: key,
+                    squareId: squareId,
+                    scoreA: a,
+                    scoreB: b,
+                    payout: payout
+                });
+            }
 
-    if (frequency === 'quarterly') {
-        processPeriod('Q1', 'q1', 'q1');
-        processPeriod('Q2', 'q2', 'q2');
-        processPeriod('Q3', 'q3', 'q3');
-        processPeriod('Final', 'final', 'final');
-    } else if (frequency === 'half-final') {
-        processPeriod('Half', 'half', 'half');
-        processPeriod('Final', 'final', 'final');
-    } else {
-        processPeriod('Final', 'final', 'final');
-    }
+            if (frequency === 'quarterly') {
+                processPeriod('Q1', 'q1', 'q1');
+                processPeriod('Q2', 'q2', 'q2');
+                processPeriod('Q3', 'q3', 'q3');
+                processPeriod('Final', 'final', 'final');
+            } else if (frequency === 'half-final') {
+                processPeriod('Half', 'half', 'half');
+                processPeriod('Final', 'final', 'final');
+            } else {
+                processPeriod('Final', 'final', 'final');
+            }
 
-    currentGrid.scores = scores;
-    currentGrid.winners = winners;
-    if (winners.length > 0) {
-        currentGrid.status = 'complete';
-    }
+            currentGrid.scores = scores;
+            currentGrid.winners = winners;
+            if (winners.length > 0) {
+                currentGrid.status = 'complete';
+            }
 
-    const idx = grids.findIndex(g => g.id === currentGrid.id);
-    grids[idx] = currentGrid;
-    saveGrids();
-    saveGridToFirestore(currentGrid);
+            const idx = grids.findIndex(g => g.id === currentGrid.id);
+            grids[idx] = currentGrid;
+            saveGrids();
+            saveGridToFirestore(currentGrid);
 
-    closeModal('enterScoresModal');
-    showSuccessBanner('✅ Scores saved and winners calculated!');
-}
-
+            closeModal('enterScoresModal');
+            showSuccessBanner('✅ Scores saved and winners calculated!');
+        }
 
         // Edit grid details
         function editGridDetails() {
@@ -1761,6 +1760,7 @@ async function accessManagerGrid() {
             const idx = grids.findIndex(g => g.id === currentGrid.id);
             grids[idx] = currentGrid;
             saveGrids();
+            saveGridToFirestore(currentGrid);
 
             renderManagerGrid();
             showSuccessBanner('✅ Grid details updated.');
@@ -1816,12 +1816,11 @@ async function accessManagerGrid() {
             saveGrids();
         }
 
-
         // Modals & banners
-                // Open the Create Grid modal
-function showCreateGridModal() {
-    showModal('createGridModal');
-}
+        function showCreateGridModal() {
+            showModal('createGridModal');
+        }
+
         function showModal(id) {
             document.getElementById(id).classList.add('active');
         }
@@ -1842,8 +1841,55 @@ function showCreateGridModal() {
             }, 2000);
         }
 
+        // Show view
+        function showView(ev, view) {
+            if (ev && ev.target) {
+                document.querySelectorAll('.view-tab').forEach(tab => tab.classList.remove('active'));
+                ev.target.classList.add('active');
+            }
+            
+            document.getElementById('homeView').classList.add('hidden');
+            document.getElementById('accessView').classList.add('hidden');
+            document.getElementById('manageView').classList.add('hidden');
+            
+            stopAutoRefresh();
+            currentGrid = null;
+            
+            if (view === 'home') {
+                document.getElementById('homeView').classList.remove('hidden');
+                renderMyGrids();
+            } else if (view === 'access') {
+                document.getElementById('accessView').classList.remove('hidden');
+                document.getElementById('participantGridView').classList.add('hidden');
+            } else if (view === 'manage') {
+                document.getElementById('manageView').classList.remove('hidden');
+                document.getElementById('managerGridView').classList.add('hidden');
+            }
+        }
+
         // Init
         window.addEventListener('load', init);
     </script>
+
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+
+    <!-- Firebase config -->
+    <script>
+      const firebaseConfig = {
+        // paste your actual config here
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_PROJECT.firebaseapp.com",
+        projectId: "YOUR_PROJECT",
+        storageBucket: "YOUR_PROJECT.appspot.com",
+        messagingSenderId: "YOUR_SENDER_ID",
+        appId: "YOUR_APP_ID"
+      };
+
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+    </script>
 </body>
 </html>
+ 
