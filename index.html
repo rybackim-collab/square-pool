@@ -498,9 +498,9 @@
             <div class="card">
                 <h2>Welcome to Square Pool Manager</h2>
                 <p style="margin-bottom: 1rem;">Create and manage square pools for your favorite games. Perfect for Super Bowl parties, playoffs, and any sporting event!</p>
-
+                
                 <div class="toolbar">
-                    <button class="btn btn-primary" onclick="showCreateGridModal()">+ Create New Grid</button>
+                    <button class="btn btn-primary" onclick="showCreateGridModal()">Create New Grid</button>
                     <button class="btn btn-secondary" onclick="showView(event, 'manage')">Manage My Grids</button>
                 </div>
             </div>
@@ -513,12 +513,12 @@
             <div class="card">
                 <h2>Join a Grid</h2>
                 <p style="margin-bottom: 1rem;">Enter the access code to view and claim squares</p>
-
+                
                 <div class="input-group">
                     <label for="accessCodeInput">Access Code</label>
                     <input type="text" id="accessCodeInput" placeholder="Enter 6-8 character code" style="text-transform: uppercase;">
                 </div>
-
+                
                 <button class="btn btn-primary" onclick="accessGrid()">Access Grid</button>
             </div>
 
@@ -530,12 +530,12 @@
             <div class="card">
                 <h2>Manage Grid</h2>
                 <p style="margin-bottom: 1rem;">Enter your manager code to manage your grid</p>
-
+                
                 <div class="input-group">
                     <label for="managerCodeInput">Manager Code</label>
                     <input type="text" id="managerCodeInput" placeholder="Enter manager code" style="text-transform: uppercase;">
                 </div>
-
+                
                 <button class="btn btn-primary" onclick="accessManagerGrid()">Access Manager Dashboard</button>
             </div>
 
@@ -550,7 +550,7 @@
                 <h2>Create New Grid</h2>
                 <button class="modal-close" onclick="closeModal('createGridModal')">&times;</button>
             </div>
-
+            
             <form id="createGridForm" onsubmit="createGrid(event)">
                 <div class="input-group">
                     <label for="gridName">Grid Name *</label>
@@ -615,7 +615,7 @@
                 <h2>Claim Square</h2>
                 <button class="modal-close" onclick="closeModal('claimSquareModal')">&times;</button>
             </div>
-
+            
             <form id="claimSquareForm" onsubmit="claimSquare(event)">
                 <div class="input-group">
                     <label for="claimName">Your Name *</label>
@@ -643,7 +643,7 @@
                 <h2>Edit Square</h2>
                 <button class="modal-close" onclick="closeModal('editSquareModal')">&times;</button>
             </div>
-
+            
             <div id="editSquareContent"></div>
         </div>
     </div>
@@ -655,7 +655,7 @@
                 <h2>Assign Numbers</h2>
                 <button class="modal-close" onclick="closeModal('assignNumbersModal')">&times;</button>
             </div>
-
+            
             <div id="assignNumbersContent"></div>
         </div>
     </div>
@@ -667,7 +667,7 @@
                 <h2>Enter Scores</h2>
                 <button class="modal-close" onclick="closeModal('enterScoresModal')">&times;</button>
             </div>
-
+            
             <form id="enterScoresForm" onsubmit="enterScores(event)">
                 <div id="scoresContent"></div>
             </form>
@@ -692,7 +692,7 @@
  firebase.initializeApp(firebaseConfig);
       const db = firebase.firestore();
     </script>
-
+   
   <script>
     // Data Structure
     let grids = [];
@@ -763,7 +763,7 @@
     function init() {
         loadGrids();
         renderMyGrids();
-
+            
             // Set default event date to tomorrow at 6 PM
             const tomorrow = new Date();
             tomorrow.setDate(tomorrow.getDate() + 1);
@@ -776,7 +776,7 @@
             const stored = localStorage.getItem('squarePoolGrids');
             if (stored) {
                 grids = JSON.parse(stored);
-
+                
                 // Clean up archived grids (older than 14 days after event)
                 const now = new Date();
                 grids = grids.filter(grid => {
@@ -785,7 +785,7 @@
                     archiveDate.setDate(archiveDate.getDate() + 14);
                     return now < archiveDate;
                 });
-
+                
                 saveGrids();
             }
         }
@@ -828,7 +828,7 @@
             }
 
             let html = '<div class="info-box" style="margin-top: 1rem;"><strong>Payout Amounts</strong></div>';
-
+            
             if (frequency === 'quarterly') {
                 html += `
                     <div class="form-row">
@@ -873,17 +873,17 @@
                     </div>
                 `;
             }
-
+            
             container.innerHTML = html;
         }
 
         // Create grid
         function createGrid(e) {
             e.preventDefault();
-
+            
             const frequency = document.getElementById('payoutFrequency').value;
             const payouts = {};
-
+            
             if (frequency === 'quarterly') {
                 payouts.q1 = parseFloat(document.getElementById('payoutQ1').value);
                 payouts.q2 = parseFloat(document.getElementById('payoutQ2').value);
@@ -927,15 +927,15 @@
                 grids.push(grid);
 saveGrids();
 saveGridToFirestore(grid);
-
+            
     closeModal('createGridModal');
     document.getElementById('createGridForm').reset();
-
+            
     // Show codes and redirect
     setTimeout(() => {
         showSuccessBanner('✅ Grid created successfully!');
         const codesMessage = `Grid Created Successfully!\n\nAccess Code: ${grid.accessCode}\n(Share with participants)\n\nManager Code: ${grid.managerCode}\n(Keep private for management)\n\nSave these codes!`;
-
+                
         alert(codesMessage);
     },500);
 }
@@ -945,14 +945,14 @@ saveGridToFirestore(grid);
                 document.querySelectorAll('.view-tab').forEach(tab => tab.classList.remove('active'));
                 ev.target.classList.add('active');
             }
-
+            
             document.getElementById('homeView').classList.add('hidden');
             document.getElementById('accessView').classList.add('hidden');
             document.getElementById('manageView').classList.add('hidden');
-
+            
             stopAutoRefresh();
             currentGrid = null;
-
+            
             if (view === 'home') {
                 document.getElementById('homeView').classList.remove('hidden');
                 renderMyGrids();
@@ -968,7 +968,7 @@ saveGridToFirestore(grid);
         // Render my grids list
         function renderMyGrids() {
             const container = document.getElementById('myGridsList');
-
+            
             if (grids.length === 0) {
                 container.innerHTML = `
                     <div class="card">
@@ -981,12 +981,12 @@ saveGridToFirestore(grid);
             }
 
             let html = '<div class="card"><h2>My Grids</h2><ul class="grid-list">';
-
+            
             grids.forEach(grid => {
                 const filledSquares = grid.squares.filter(s => s.owner).length;
                 const eventDate = new Date(grid.eventDate);
                 const status = getGridStatus(grid);
-
+                
                 html += `
                     <li class="grid-list-item" onclick="quickViewGrid('${grid.managerCode}')">
                         <h3>${grid.name} <span class="badge badge-${status}">${status.toUpperCase()}</span></h3>
@@ -997,7 +997,7 @@ saveGridToFirestore(grid);
                     </li>
                 `;
             });
-
+            
             html += '</ul></div>';
             container.innerHTML = html;
         }
@@ -1021,7 +1021,7 @@ saveGridToFirestore(grid);
         // Access grid as participant (multi-device)
 async function accessGrid() {
     const code = document.getElementById('accessCodeInput').value.toUpperCase().trim();
-
+    
     if (!code) {
         alert('Please enter an access code');
         return;
@@ -1062,7 +1062,7 @@ async function accessGrid() {
         // Access grid as manager (multi-device)
 async function accessManagerGrid() {
     const code = document.getElementById('managerCodeInput').value.toUpperCase().trim();
-
+    
     if (!code) {
         alert('Please enter a manager code');
         return;
@@ -1106,7 +1106,7 @@ async function accessManagerGrid() {
             const container = document.getElementById('participantGridView');
             const filledSquares = currentGrid.squares.filter(s => s.owner).length;
             const eventDate = new Date(currentGrid.eventDate);
-
+            
             let html = `
                 <div class="card">
                     <h2>${currentGrid.name}</h2>
@@ -1134,7 +1134,7 @@ async function accessManagerGrid() {
             if (currentGrid.winners.length > 0) {
                 html += renderWinners();
             }
-
+            
             container.innerHTML = html;
             container.classList.remove('hidden');
         }
@@ -1146,7 +1146,7 @@ async function accessManagerGrid() {
             const filledSquares = currentGrid.squares.filter(s => s.owner).length;
             const eventDate = new Date(currentGrid.eventDate);
             const canEdit = !currentGrid.numbersAssigned;
-
+            
             let html = `
                 <div class="card">
                     <h2>${currentGrid.name}</h2>
@@ -1191,7 +1191,7 @@ async function accessManagerGrid() {
             if (currentGrid.winners.length > 0) {
                 html += renderWinners();
             }
-
+            
             container.innerHTML = html;
             container.classList.remove('hidden');
         }
@@ -1200,39 +1200,39 @@ async function accessManagerGrid() {
         function renderGrid(isManager) {
             if (!currentGrid) return '';
             const canClaim = !currentGrid.numbersAssigned;
-
+            
             let html = '<div class="card"><h2>Grid</h2><div class="grid-container"><div class="grid">';
-
+            
             html += '<div class="grid-cell grid-header"></div>';
-
+            
             for (let col = 0; col < 10; col++) {
                 const num = currentGrid.colNumbers[col];
                 html += `<div class="grid-cell ${num !== null ? 'grid-number' : 'grid-header'}">${num !== null ? num : ''}</div>`;
             }
-
+            
             for (let row = 0; row < 10; row++) {
                 const rowNum = currentGrid.rowNumbers[row];
                 html += `<div class="grid-cell ${rowNum !== null ? 'grid-number' : 'grid-header'}">${rowNum !== null ? rowNum : ''}</div>`;
-
+                
                 for (let col = 0; col < 10; col++) {
                     const squareId = row * 10 + col;
                     const square = currentGrid.squares[squareId];
                     const isWinner = currentGrid.winners.some(w => w.squareId === squareId);
-
+                    
                     const classes = ['grid-cell', 'grid-square'];
                     if (square.owner) classes.push('claimed');
                     if (isWinner) classes.push('winner');
                     if (!canClaim || square.owner) classes.push('disabled');
-
+                    
                     let clickHandler = '';
                     if (!isManager && canClaim && !square.owner) {
                         clickHandler = `onclick="selectSquare(${squareId})"`;
                     } else if (isManager && canClaim && square.owner) {
                         clickHandler = `onclick="editSquare(${squareId})"`;
                     }
-
+                    
                     html += `<div class="${classes.join(' ')}" ${clickHandler}>`;
-
+                    
                     if (square.owner) {
                         html += `<div style="font-weight: 600;">${square.owner.name}</div>`;
                         if (isManager) {
@@ -1241,11 +1241,11 @@ async function accessManagerGrid() {
                     } else if (canClaim && !isManager) {
                         html += '<div style="color: var(--color-text-secondary);">Available</div>';
                     }
-
+                    
                     html += '</div>';
                 }
             }
-
+            
             html += '</div></div></div>';
             return html;
         }
@@ -1253,7 +1253,7 @@ async function accessManagerGrid() {
         // Render winners
         function renderWinners() {
             let html = '<div class="winners-panel"><h2>🏆 Winners</h2>';
-
+            
             currentGrid.winners.forEach(winner => {
                 const square = currentGrid.squares[winner.squareId];
                 html += `
@@ -1266,7 +1266,7 @@ async function accessManagerGrid() {
                     </div>
                 `;
             });
-
+            
             html += '</div>';
             return html;
         }
@@ -1280,23 +1280,23 @@ async function accessManagerGrid() {
         // Claim square
         function claimSquare(e) {
             e.preventDefault();
-
+            
             const name = document.getElementById('claimName').value.trim();
             const phone = document.getElementById('claimPhone').value.trim();
-
+            
             const userSquares = currentGrid.squares.filter(s => s.owner && s.owner.phone === phone);
             if (userSquares.length >= 8) {
                 alert('You have already claimed the maximum of 8 squares.');
                 closeModal('claimSquareModal');
                 return;
             }
-
+            
             currentGrid.squares[selectedSquare].owner = { name, phone };
-
+            
             const gridIndex = grids.findIndex(g => g.id === currentGrid.id);
             grids[gridIndex] = currentGrid;
             saveGrids();
-
+            
             closeModal('claimSquareModal');
 
             if (document.getElementById('participantGridView') && 
@@ -1591,8 +1591,7 @@ async function accessManagerGrid() {
             grids[idx] = currentGrid;
             saveGrids();
             // Also save to Firestore for multi-device access
-    saveGridToFirestore(grid);
-    saveGridToFirestore(currentGrid;
+    saveGridToFirestore(currentGrid);
 
 
 
