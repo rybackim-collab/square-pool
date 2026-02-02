@@ -901,32 +901,24 @@
                 notifications: []
             };
 
-            grids.push(grid);
-            saveGrids();
+                grids.push(grid);
+    saveGrids();
+    // Also save to Firestore for multi-device access
+    saveGridToFirestore(grid);
             
-            closeModal('createGridModal');
-            document.getElementById('createGridForm').reset();
+    closeModal('createGridModal');
+    document.getElementById('createGridForm').reset();
             
-            setTimeout(() => {
-                showSuccessBanner('✅ Grid created successfully!');
-                const codesMessage = `Grid Created Successfully!\n\nAccess Code: ${grid.accessCode}\n(Share with participants)\n\nManager Code: ${grid.managerCode}\n(Keep private for management)\n\nSave these codes!`;
-                alert(codesMessage);
+    // Show codes and redirect...
+    setTimeout(() => {
+        showSuccessBanner('✅ Grid created successfully!');
+        const codesMessage = `Grid Created Successfully!\n\nAccess Code: ${grid.accessCode}\n(Share with participants)\n\nManager Code: ${grid.managerCode}\n(Keep private for management)\n\nSave these codes!`;
                 
-                currentGrid = grid;
-                document.getElementById('managerCodeInput').value = grid.managerCode;
-                
-                document.querySelectorAll('.view-tab').forEach(tab => tab.classList.remove('active'));
-                document.querySelectorAll('.view-tab')[2].classList.add('active');
-                
-                document.getElementById('homeView').classList.add('hidden');
-                document.getElementById('accessView').classList.add('hidden');
-                document.getElementById('manageView').classList.remove('hidden');
-                
-                renderManagerGrid();
-                startAutoRefresh();
-                checkNotifications(grid);
-            }, 500);
-        }
+        alert(codesMessage);
+        ...
+    }, 500);
+}
+
 
         // Show view (note: pass event explicitly)
         function showView(ev, view) {
