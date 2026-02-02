@@ -878,67 +878,91 @@
         }
 
         // Create grid
-        function createGrid(e) {
-            e.preventDefault();
-            
-            const frequency = document.getElementById('payoutFrequency').value;
-            const payouts = {};
-            
-            if (frequency === 'quarterly') {
-                payouts.q1 = parseFloat(document.getElementById('payoutQ1').value);
-                payouts.q2 = parseFloat(document.getElementById('payoutQ2').value);
-                payouts.q3 = parseFloat(document.getElementById('payoutQ3').value);
-                payouts.final = parseFloat(document.getElementById('payoutFinal').value);
-            } else if (frequency === 'half-final') {
-                payouts.half = parseFloat(document.getElementById('payoutHalf').value);
-                payouts.final = parseFloat(document.getElementById('payoutFinal').value);
-            } else {
-                payouts.final = parseFloat(document.getElementById('payoutFinal').value);
-            }
+function createGrid(e) {
+    e.preventDefault();
+    
+    const frequency = document.getElementById('payoutFrequency').value;
+    const payouts = {};
+    
+    if (frequency === 'quarterly') {
+        payouts.q1 = parseFloat(document.getElementById('payoutQ1').value);
+        payouts.q2 = parseFloat(document.getElementById('payoutQ2').value);
+        payouts.q3 = parseFloat(document.getElementById('payoutQ3').value);
+        payouts.final = parseFloat(document.getElementById('payoutFinal').value);
+    } else if (frequency === 'half-final') {
+        payouts.half = parseFloat(document.getElementById('payoutHalf').value);
+        payouts.final = parseFloat(document.getElementById('payoutFinal').value);
+    } else {
+        payouts.final = parseFloat(document.getElementById('payoutFinal').value);
+    }
 
-            const grid = {
-                id: Date.now(),
-                name: document.getElementById('gridName').value,
-                eventName: document.getElementById('eventName').value,
-                eventDate: document.getElementById('eventDate').value,
-                pricePerSquare: parseFloat(document.getElementById('pricePerSquare').value),
-                payoutFrequency: frequency,
-                payouts: payouts,
-                assignmentMethod: document.getElementById('assignmentMethod').value,
-                rules: document.getElementById('gridRules').value,
-                accessCode: generateCode(),
-                managerCode: generateCode(),
-                status: 'live',
-                squares: Array(100).fill(null).map((_, i) => ({
-                    id: i,
-                    row: Math.floor(i / 10),
-                    col: i % 10,
-                    owner: null
-                })),
-                rowNumbers: Array(10).fill(null),
-                colNumbers: Array(10).fill(null),
-                numbersAssigned: false,
-                scores: {},
-                winners: [],
-                createdAt: new Date().toISOString(),
-                notifications: []
-            };
+    const grid = {
+        id: Date.now(),
+        name: document.getElementById('gridName').value,
+        eventName: document.getElementById('eventName').value,
+        eventDate: document.getElementById('eventDate').value,
+        pricePerSquare: parseFloat(document.getElementById('pricePerSquare').value),
+        payoutFrequency: frequency,
+        payouts: payouts,
+        assignmentMethod: document.getElementById('assignmentMethod').value,
+        rules: document.getElementById('gridRules').value,
+        accessCode: generateCode(),
+        managerCode: generateCode(),
+        status: 'live',
+        squares: Array(100).fill(null).map((_, i) => ({
+            id: i,
+            row: Math.floor(i / 10),
+            col: i % 10,
+            owner: null
+        })),
+        rowNumbers: Array(10).fill(null),
+        colNumbers: Array(10).fill(null),
+        numbersAssigned: false,
+        scores: {},
+        winners: [],
+        createdAt: new Date().toISOString(),
+        notifications: []
+    };
 
-                grids.push(grid);
-saveGrids();
-saveGridToFirestore(grid);
-            
+    grids.push(grid);
+    saveGrids();
+    saveGridToFirestore(grid);
+    
     closeModal('createGridModal');
     document.getElementById('createGridForm').reset();
-            
+    
     // Show codes and redirect
     setTimeout(() => {
         showSuccessBanner('✅ Grid created successfully!');
         const codesMessage = `Grid Created Successfully!\n\nAccess Code: ${grid.accessCode}\n(Share with participants)\n\nManager Code: ${grid.managerCode}\n(Keep private for management)\n\nSave these codes!`;
-                
         alert(codesMessage);
-    },500);
+    }, 500);
+} // end of createGrid
+// Modals & banners
+function showCreateGridModal() {
+    showModal('createGridModal');
 }
+
+function showModal(id) {
+    document.getElementById(id).classList.add('active');
+}
+
+function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+}
+
+function showSuccessBanner(message) {
+    const banner = document.createElement('div');
+    banner.className = 'success-banner';
+    banner.textContent = message;
+    document.body.appendChild(banner);
+
+    setTimeout(function () {
+        banner.style.animation = 'slideUp 0.3s ease forwards';
+        setTimeout(function () { banner.remove(); }, 200);
+    }, 2000);
+}
+
         // Show view (note: pass event explicitly)
         function showView(ev, view) {
             if (ev && ev.target) {
