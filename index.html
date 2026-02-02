@@ -1534,66 +1534,63 @@ async function accessManagerGrid() {
         }
 
         function enterScores(e) {
-            e.preventDefault();
-            const frequency = currentGrid.payoutFrequency;
-            const winners = [];
-            const scores = {};
+    e.preventDefault();
+    const frequency = currentGrid.payoutFrequency;
+    const winners = [];
+    const scores = {};
 
-            function processPeriod(label, key, payoutKey) {
-                const a = parseInt(document.getElementById(`${key}ScoreA`).value, 10);
-                const b = parseInt(document.getElementById(`${key}ScoreB`).value, 10);
-                if (isNaN(a) || isNaN(b)) return;
+    function processPeriod(label, key, payoutKey) {
+        const a = parseInt(document.getElementById(`${key}ScoreA`).value, 10);
+        const b = parseInt(document.getElementById(`${key}ScoreB`).value, 10);
+        if (isNaN(a) || isNaN(b)) return;
 
-                scores[key] = { a, b };
-                const lastA = a % 10;
-                const lastB = b % 10;
+        scores[key] = { a, b };
+        const lastA = a % 10;
+        const lastB = b % 10;
 
-                const rowIndex = currentGrid.rowNumbers.indexOf(lastA);
-                const colIndex = currentGrid.colNumbers.indexOf(lastB);
-                if (rowIndex === -1 || colIndex === -1) return;
+        const rowIndex = currentGrid.rowNumbers.indexOf(lastA);
+        const colIndex = currentGrid.colNumbers.indexOf(lastB);
+        if (rowIndex === -1 || colIndex === -1) return;
 
-                const squareId = rowIndex * 10 + colIndex;
-                const square = currentGrid.squares[squareId];
-                if (!square.owner) return;
+        const squareId = rowIndex * 10 + colIndex;
+        const square = currentGrid.squares[squareId];
+        if (!square.owner) return;
 
-                const payout = currentGrid.payouts[payoutKey];
-                if (!payout || payout <= 0) return;
+        const payout = currentGrid.payouts[payoutKey];
+        if (!payout || payout <= 0) return;
 
-                winners.push({
-                    period: label,
-                    key,
-                    squareId,
-                    scoreA: a,
-                    scoreB: b,
-                    payout
-                });
-            }
+        winners.push({
+            period: label,
+            key: key,
+            squareId: squareId,
+            scoreA: a,
+            scoreB: b,
+            payout: payout
+        });
+    }
 
-            if (frequency === 'quarterly') {
-                processPeriod('Q1', 'q1', 'q1');
-                processPeriod('Q2', 'q2', 'q2');
-                processPeriod('Q3', 'q3', 'q3');
-                processPeriod('Final', 'final', 'final');
-            } else if (frequency === 'half-final') {
-                processPeriod('Half', 'half', 'half');
-                processPeriod('Final', 'final', 'final');
-            } else {
-                processPeriod('Final', 'final', 'final');
-            }
+    if (frequency === 'quarterly') {
+        processPeriod('Q1', 'q1', 'q1');
+        processPeriod('Q2', 'q2', 'q2');
+        processPeriod('Q3', 'q3', 'q3');
+        processPeriod('Final', 'final', 'final');
+    } else if (frequency === 'half-final') {
+        processPeriod('Half', 'half', 'half');
+        processPeriod('Final', 'final', 'final');
+    } else {
+        processPeriod('Final', 'final', 'final');
+    }
 
-            currentGrid.scores = scores;
-            currentGrid.winners = winners;
-            if (winners.length > 0) {
-                currentGrid.status = 'complete';
-            }
+    currentGrid.scores = scores;
+    currentGrid.winners = winners;
+    if (winners.length > 0) {
+        currentGrid.status = 'complete';
+    }
 
-            const idx = grids.findIndex(g => g.id === currentGrid.id);
-            grids[idx] = currentGrid;
-            saveGrids();
-            // Also save to Firestore for multi-device access
+    const idx = grids.findIndex(g => g.id === currentGrid.id);
+    grids[idx] = currentGrid;
+    saveGrids();
     saveGridToFirestore(currentGrid);
-
-
 
             closeModal('enterScoresModal');
             renderManagerGrid();
