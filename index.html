@@ -924,46 +924,104 @@
                 notifications: []
             };
 
-                grids.push(grid);
-saveGrids();
-saveGridToFirestore(grid);
+                          grids.push(grid);
+            saveGrids();
+            saveGridToFirestore(grid);
             
-    closeModal('createGridModal');
-    document.getElementById('createGridForm').reset();
+            closeModal('createGridModal');
+            document.getElementById('createGridForm').reset();
             
-    // Show codes and redirect
-    setTimeout(() => {
-        showSuccessBanner('✅ Grid created successfully!');
-        const codesMessage = `Grid Created Successfully!\n\nAccess Code: ${grid.accessCode}\n(Share with participants)\n\nManager Code: ${grid.managerCode}\n(Keep private for management)\n\nSave these codes!`;
-                
-        alert(codesMessage);
-    },500);
+            // Show codes and redirect
+            setTimeout(() => {
+                showSuccessBanner('✅ Grid created successfully!');
+                const codesMessage = `Grid Created Successfully!\n\nAccess Code: ${grid.accessCode}\n(Share with participants)\n\nManager Code: ${grid.managerCode}\n(Keep private for management)\n\nSave these codes!`;
+                alert(codesMessage);
+            }, 500);
+        }   // ← closes createGrid properly
+// Modals & banners
+function showCreateGridModal() {
+    showModal('createGridModal');
 }
+
+function showModal(id) {
+    document.getElementById(id).classList.add('active');
+}
+
+function closeModal(id) {
+    document.getElementById(id).classList.remove('active');
+}
+
+function showSuccessBanner(message) {
+    const banner = document.createElement('div');
+    banner.className = 'success-banner';
+    banner.textContent = message;
+    document.body.appendChild(banner);
+
+    setTimeout(function () {
+        banner.style.animation = 'slideUp 0.3s ease forwards';
+        setTimeout(function () { banner.remove(); }, 300);
+    }, 2000);
+}
+
         // Show view (note: pass event explicitly)
-        function showView(ev, view) {
-            if (ev && ev.target) {
-                document.querySelectorAll('.view-tab').forEach(tab => tab.classList.remove('active'));
-                ev.target.classList.add('active');
-            }
-            
-            document.getElementById('homeView').classList.add('hidden');
-            document.getElementById('accessView').classList.add('hidden');
-            document.getElementById('manageView').classList.add('hidden');
-            
-            stopAutoRefresh();
-            currentGrid = null;
-            
-            if (view === 'home') {
-                document.getElementById('homeView').classList.remove('hidden');
-                renderMyGrids();
-            } else if (view === 'access') {
-                document.getElementById('accessView').classList.remove('hidden');
-                document.getElementById('participantGridView').classList.add('hidden');
-            } else if (view === 'manage') {
-                document.getElementById('manageView').classList.remove('hidden');
-                document.getElementById('managerGridView').classList.add('hidden');
-            }
+        // Show view
+        // Auto refresh
+function startAutoRefresh() {
+    stopAutoRefresh();
+    autoRefreshInterval = setInterval(() => {
+        loadGrids();
+        if (!currentGrid) return;
+        const updated = grids.find(g => g.id === currentGrid.id);
+        if (!updated) return;
+        currentGrid = updated;
+
+        if (document.getElementById('participantGridView') &&
+            !document.getElementById('participantGridView').classList.contains('hidden')) {
+            renderParticipantGrid();
         }
+        if (document.getElementById('managerGridView') &&
+            !document.getElementById('managerGridView').classList.contains('hidden')) {
+            renderManagerGrid();
+        }
+    }, 5000);
+}
+
+function stopAutoRefresh() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+    }
+    autoRefreshInterval = null;
+}
+
+function showView(ev, view) {
+    if (ev && ev.target) {
+        document.querySelectorAll('.view-tab').forEach(function (tab) {
+            tab.classList.remove('active');
+        });
+        ev.target.classList.add('active');
+    }
+
+    document.getElementById('homeView').classList.add('hidden');
+    document.getElementById('accessView').classList.add('hidden');
+    document.getElementById('manageView').classList.add('hidden');
+
+    stopAutoRefresh();
+    currentGrid = null;
+
+    if (view === 'home') {
+        document.getElementById('homeView').classList.remove('hidden');
+        renderMyGrids();
+    } else if (view === 'access') {
+        document.getElementById('accessView').classList.remove('hidden');
+        document.getElementById('participantGridView').classList.add('hidden');
+    } else if (view === 'manage') {
+        document.getElementById('manageView').classList.remove('hidden');
+        document.getElementById('managerGridView').classList.add('hidden');
+    }
+}
+
+// Init
+window.addEventListener('load', init);
 
         // Render my grids list
         function renderMyGrids() {
@@ -1588,7 +1646,5 @@ function enterScores(e) {
     showSuccessBanner('Scores saved and winners calculated!');
 }
 
-// keep your existing editGridDetails, updateEditPayoutFields, saveGridDetails,
-// deleteGrid, startAutoRefresh, stopAutoRefresh, checkNotifications,
-// showCreateGridModal, showModal, closeModal, showSuccessBanner, showView,
-// window.addEventListener('load', init);
+// nothing else after this in the script
+</script>
