@@ -909,13 +909,12 @@
     closeModal('createGridModal');
     document.getElementById('createGridForm').reset();
             
-    // Show codes and redirect...
+    // Show codes and redirect
     setTimeout(() => {
         showSuccessBanner('✅ Grid created successfully!');
         const codesMessage = `Grid Created Successfully!\n\nAccess Code: ${grid.accessCode}\n(Share with participants)\n\nManager Code: ${grid.managerCode}\n(Keep private for management)\n\nSave these codes!`;
                 
         alert(codesMessage);
-        ...
     }, 500);
 }
 
