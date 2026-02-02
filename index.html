@@ -1591,7 +1591,6 @@ async function accessManagerGrid() {
             grids[idx] = currentGrid;
             saveGrids();
             saveGridToFirestore(currentGrid);
-
             closeModal('enterScoresModal');
             showSuccessBanner('Scores saved and winners calculated!');
         }
